@@ -16,28 +16,26 @@ public class FraudEngineConfig {
     @Bean("dbFraudRuleEngine")
     public FraudRuleEngine dbFraudRuleEngine(
             BlacklistMerchantRule blacklistMerchantRule,
-            DatabaseVelocityRule databaseVelocityRule,
-            TransactionLogRepository  transactionLogRepository){
+            DatabaseVelocityRule databaseVelocityRule){
 
         List<FraudRule> rules = List.of(
                 blacklistMerchantRule,
                 databaseVelocityRule
         );
 
-        return new FraudRuleEngine(rules, transactionLogRepository);
+        return new FraudRuleEngine(rules);
     }
 
     @Bean("redisFraudRuleEngine")
     public FraudRuleEngine redisFraudRuleEngine(
             BlacklistMerchantRule blacklistMerchantRule,
-            RedisVelocityRule redisVelocityRule,
-            TransactionLogRepository  transactionLogRepository){
+            RedisVelocityRule redisVelocityRule){
 
         List<FraudRule> rules = List.of(
                 blacklistMerchantRule,
                 redisVelocityRule
         );
 
-        return new FraudRuleEngine(rules, transactionLogRepository);
+        return new FraudRuleEngine(rules);
     }
 }

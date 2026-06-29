@@ -1,17 +1,14 @@
 package com.interswitch.verveguardfraudservice.engine;
 
+import com.interswitch.verveguardfraudservice.aspect.PerformanceAudit;
 import com.interswitch.verveguardfraudservice.dto.TransactionRequest;
 import com.interswitch.verveguardfraudservice.dto.TransactionResponse;
-import com.interswitch.verveguardfraudservice.entity.TransactionLog;
 import com.interswitch.verveguardfraudservice.model.ClientProfile;
-import com.interswitch.verveguardfraudservice.repository.TransactionLogRepository;
 import com.interswitch.verveguardfraudservice.rules.FraudRule;
 import com.interswitch.verveguardfraudservice.model.RuleDecision;
 import com.interswitch.verveguardfraudservice.model.RuleResult;
-import com.interswitch.verveguardfraudservice.utils.Utils;
-import org.springframework.context.annotation.Configuration;
 
-import java.time.Instant;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -19,20 +16,17 @@ import java.util.stream.Collectors;
 
 public class FraudRuleEngine {
     private final List<FraudRule> rules;
-    private final TransactionLogRepository transactionLogRepository;
 
 
-    public FraudRuleEngine(List<FraudRule> rules, TransactionLogRepository transactionLogRepository) {
+    public FraudRuleEngine(List<FraudRule> rules) {
         this.rules = rules;
-        this.transactionLogRepository = transactionLogRepository;
     }
 
+    @PerformanceAudit
     public TransactionResponse processTransaction(TransactionRequest transactionRequest, ClientProfile clientProfile) {
         int totalScore = 0;
 
         List<RuleResult> results = new ArrayList<>();
-
-        long start = System.currentTimeMillis();
 
         // 1. Loop through all rules and evaluate them (based on client's choice)
         for (FraudRule rule : rules) {
@@ -66,22 +60,6 @@ public class FraudRuleEngine {
                         Collectors.joining(", "),
                         s -> s.isEmpty() ? "No rules triggered" : s
                 ));
-
-        // 5. Create a Transaction Log
-        TransactionLog transactionLog = TransactionLog.builder()
-                .traceId(traceId)
-                .clientId(transactionRequest.clientId())
-                .clientTier(String.valueOf(clientProfile.tier()))
-                .decision(String.valueOf(decision))
-                .aggregateScore(totalScore)
-                .ipAddress(transactionRequest.ipAddress())
-                .cardNumberHash(Utils.hashCardNumber(transactionRequest.cardNumber()))
-                .createdAt(Instant.now())
-                .executionTimeMs(System.currentTimeMillis() - start)
-                .build();
-
-        // 6. Save the Transaction Log to the DB
-        transactionLogRepository.save(transactionLog);
 
 
         return new TransactionResponse(traceId, String.valueOf(decision), totalScore, reason);
