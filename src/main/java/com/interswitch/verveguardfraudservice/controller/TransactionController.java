@@ -19,10 +19,12 @@ import java.util.Set;
 @RestController
 @RequestMapping("api/transactions")
 public class TransactionController {
-    private final FraudRuleEngine  fraudRuleEngine;
+    private final FraudRuleEngine  dbFraudRuleEngine;
+    private final FraudRuleEngine  redisFraudRuleEngine;
 
-    public TransactionController(@Qualifier("fraudRuleEngine") FraudRuleEngine fraudRuleEngine) {
-        this.fraudRuleEngine = fraudRuleEngine;
+    public TransactionController(@Qualifier("dbFraudRuleEngine") FraudRuleEngine dbFraudRuleEngine, @Qualifier("redisFraudRuleEngine") FraudRuleEngine redisFraudRuleEngine) {
+        this.dbFraudRuleEngine = dbFraudRuleEngine;
+        this.redisFraudRuleEngine = redisFraudRuleEngine;
     }
 
     @PostMapping("/verify")
@@ -45,7 +47,29 @@ public class TransactionController {
         ClientProfile clientProfile = new ClientProfile(transactionRequest.clientId(), tier, categories);
 
         // 2. Process the transaction through our Rules Engine
-        TransactionResponse transactionResponse = fraudRuleEngine.processTransaction(transactionRequest, clientProfile);
+        TransactionResponse transactionResponse = dbFraudRuleEngine.processTransaction(transactionRequest, clientProfile);
+
+        return ResponseEntity.ok(transactionResponse);
+    }
+
+    @PostMapping("/verify/redis")
+    public ResponseEntity<TransactionResponse> verifyRedisTransaction(@RequestBody TransactionRequest transactionRequest) {
+        ClientTier tier = ClientTier.BRONZE;
+        if (transactionRequest.clientId() != null) {
+            String lowerId = transactionRequest.clientId().toLowerCase();
+            if (lowerId.startsWith("bronze")) {
+                tier = ClientTier.BRONZE;
+            } else if (lowerId.startsWith("silver")) {
+                tier = ClientTier.SILVER;
+            } else if (lowerId.startsWith("gold")) {
+                tier = ClientTier.GOLD;
+            }
+        }
+
+        Set<RuleCategory> categories = Set.of(RuleCategory.BLACKLIST, RuleCategory.VELOCITY);
+        ClientProfile clientProfile = new ClientProfile(transactionRequest.clientId(), tier, categories);
+
+        TransactionResponse transactionResponse = redisFraudRuleEngine.processTransaction(transactionRequest, clientProfile);
 
         return ResponseEntity.ok(transactionResponse);
     }
