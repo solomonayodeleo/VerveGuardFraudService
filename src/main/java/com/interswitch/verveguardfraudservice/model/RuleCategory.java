@@ -1,4 +1,4 @@
-package com.interswitch.verveguardfraudservice.rules;
+package com.interswitch.verveguardfraudservice.model;
 
 public enum RuleCategory {
     BLACKLIST,

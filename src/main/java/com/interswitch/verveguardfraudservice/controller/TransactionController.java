@@ -6,18 +6,22 @@ import com.interswitch.verveguardfraudservice.dto.TransactionResponse;
 import com.interswitch.verveguardfraudservice.engine.FraudRuleEngine;
 import com.interswitch.verveguardfraudservice.model.ClientProfile;
 import com.interswitch.verveguardfraudservice.model.ClientTier;
+import com.interswitch.verveguardfraudservice.model.RuleCategory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Set;
+
 @RestController
 @RequestMapping("api/transactions")
 public class TransactionController {
     private final FraudRuleEngine  fraudRuleEngine;
 
-    public TransactionController(FraudRuleEngine fraudRuleEngine) {
+    public TransactionController(@Qualifier("fraudRuleEngine") FraudRuleEngine fraudRuleEngine) {
         this.fraudRuleEngine = fraudRuleEngine;
     }
 
@@ -37,7 +41,8 @@ public class TransactionController {
             }
         }
 
-        ClientProfile clientProfile = new ClientProfile(transactionRequest.clientId(), tier);
+        Set<RuleCategory> categories = Set.of(RuleCategory.BLACKLIST, RuleCategory.VELOCITY);
+        ClientProfile clientProfile = new ClientProfile(transactionRequest.clientId(), tier, categories);
 
         // 2. Process the transaction through our Rules Engine
         TransactionResponse transactionResponse = fraudRuleEngine.processTransaction(transactionRequest, clientProfile);
