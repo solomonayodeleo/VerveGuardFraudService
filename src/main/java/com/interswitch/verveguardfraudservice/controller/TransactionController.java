@@ -31,7 +31,7 @@ public class TransactionController {
     public ResponseEntity<TransactionResponse> verifyTransaction(@RequestBody TransactionRequest transactionRequest) {
 
         // 1. Resolve client tier dynamically based on the clientId prefix for testing
-        ClientTier tier;
+        ClientTier tier = null;
         if (transactionRequest.clientId() != null) {
             String lowerId = transactionRequest.clientId().toLowerCase();
             if (lowerId.startsWith("bronze")) {
@@ -54,7 +54,7 @@ public class TransactionController {
 
     @PostMapping("/verify/redis")
     public ResponseEntity<TransactionResponse> verifyRedisTransaction(@RequestBody TransactionRequest transactionRequest) {
-        ClientTier tier;
+        ClientTier tier = null;
         if (transactionRequest.clientId() != null) {
             String lowerId = transactionRequest.clientId().toLowerCase();
             if (lowerId.startsWith("bronze")) {
