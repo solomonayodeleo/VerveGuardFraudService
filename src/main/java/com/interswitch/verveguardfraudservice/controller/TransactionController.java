@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Set;
 
 @RestController
-@RequestMapping("api/transactions")
+@RequestMapping("/api/transactions")
 public class TransactionController {
     private final FraudRuleEngine  dbFraudRuleEngine;
     private final FraudRuleEngine  redisFraudRuleEngine;
