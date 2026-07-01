@@ -8,19 +8,21 @@ import com.interswitch.verveguardfraudservice.repository.TransactionLogRepositor
 import com.interswitch.verveguardfraudservice.utils.Utils;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class DatabaseVelocityRule implements FraudRule {
 
     private final TransactionLogRepository transactionLogRepository;
 
     // This runs automatically if Redis crashes or times out!
     public RuleResult failOpen(TransactionRequest request, ClientProfile profile, Throwable throwable) {
-        System.out.println("⚠️ DB IS DOWN! Failing Open gracefully. Error: " + throwable.getMessage());
+        log.error("⚠️ DB IS DOWN! Failing Open gracefully. Error: {}", throwable.getMessage());
 
         // Return a score of 0 so the transaction is NOT blocked by a broken cache!
         return new RuleResult("Database Velocity Rule", 0, RuleCategory.VELOCITY);
