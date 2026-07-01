@@ -6,21 +6,25 @@ import com.interswitch.verveguardfraudservice.entity.TransactionLog;
 import com.interswitch.verveguardfraudservice.model.ClientProfile;
 import com.interswitch.verveguardfraudservice.repository.TransactionLogRepository;
 import com.interswitch.verveguardfraudservice.utils.Utils;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.concurrent.TimeUnit;
 
 @Aspect
 @Component
 public class PerformanceAspect {
 
     private final TransactionLogRepository  transactionLogRepository;
+    private final MeterRegistry meterRegistry;
 
-    public PerformanceAspect(TransactionLogRepository transactionLogRepository) {
+    public PerformanceAspect(TransactionLogRepository transactionLogRepository, MeterRegistry meterRegistry) {
         this.transactionLogRepository = transactionLogRepository;
+        this.meterRegistry = meterRegistry;
     }
 
     // This intercepts ANY method that has the custom annotation
@@ -29,6 +33,10 @@ public class PerformanceAspect {
         long  start = System.currentTimeMillis();
         Object result = joinPoint.proceed();
         long executionTime = System.currentTimeMillis()  - start;
+
+        // Log to Prometheus
+        meterRegistry.timer("fraud.engine.performance")
+                .record(executionTime, TimeUnit.MILLISECONDS);
 
         // Extract the Inputs (Request and Profile) from the Engine's method arguments
         Object[] args = joinPoint.getArgs();
