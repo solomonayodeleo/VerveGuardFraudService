@@ -7,6 +7,7 @@ import com.interswitch.verveguardfraudservice.engine.FraudRuleEngine;
 import com.interswitch.verveguardfraudservice.model.ClientProfile;
 import com.interswitch.verveguardfraudservice.model.ClientTier;
 import com.interswitch.verveguardfraudservice.model.RuleCategory;
+import com.interswitch.verveguardfraudservice.service.RateLimiterService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,14 +22,20 @@ import java.util.Set;
 public class TransactionController {
     private final FraudRuleEngine  dbFraudRuleEngine;
     private final FraudRuleEngine  redisFraudRuleEngine;
+    private final RateLimiterService  rateLimiterService;
 
-    public TransactionController(@Qualifier("dbFraudRuleEngine") FraudRuleEngine dbFraudRuleEngine, @Qualifier("redisFraudRuleEngine") FraudRuleEngine redisFraudRuleEngine) {
+    public TransactionController(@Qualifier("dbFraudRuleEngine") FraudRuleEngine dbFraudRuleEngine, @Qualifier("redisFraudRuleEngine") FraudRuleEngine redisFraudRuleEngine, RateLimiterService rateLimiterService) {
         this.dbFraudRuleEngine = dbFraudRuleEngine;
         this.redisFraudRuleEngine = redisFraudRuleEngine;
+        this.rateLimiterService = rateLimiterService;
     }
 
     @PostMapping("/verify")
     public ResponseEntity<TransactionResponse> verifyTransaction(@RequestBody TransactionRequest transactionRequest) {
+
+        if (!rateLimiterService.isAllowed(transactionRequest.ipAddress())) {
+            return ResponseEntity.status(429).body(new TransactionResponse("Too many requests. Please try again later.", "", 0, ""));
+        }
 
         // 1. Resolve client tier dynamically based on the clientId prefix for testing
         ClientTier tier = null;
