@@ -3,11 +3,12 @@ package com.interswitch.verveguardfraudservice.entity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Audited;
 
+import java.io.Serializable;
 import java.time.Instant;
 
 @Entity
 @Table(name = "blacklist_merchants")
-public class BlacklistsMerchant {
+public class BlacklistsMerchant implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
