@@ -1,6 +1,6 @@
 # The Verve-Guard Fraud Detection Sidecar
 
-This repository contains the materials and implementation for the Interswitch SpringBoot Academy assignment, featuring the **Securing the Payment Status API** Hands-on Lab and the **Verve-Guard Fraud Detection Sidecar** Capstone Project.
+This repository contains the materials and implementation for the Interswitch SpringBoot Switch School assessment, featuring the **Securing the Payment Status API** Hands-on Lab and the **Verve-Guard Fraud Detection Sidecar** Capstone Project.
 
 ---
 
